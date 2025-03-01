@@ -1,29 +1,19 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-<<<<<<< HEAD
 import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { HelpCircle, Users, SkipForward, Mic } from "lucide-react"
-=======
-import { motion, AnimatePresence } from "framer-motion"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { HelpCircle, Users, SkipForward, Mic } from 'lucide-react'
->>>>>>> 4608d31 (456789)
 import Character from "@/components/Character"
 import { ttsService } from "@/lib/tts"
 import { speechService } from "@/lib/speech"
 import { useGame } from "@/providers/GameContext"
-import type { Player } from "@/types/types"
+import type { Player, Question, QuestionSet } from "@/types/types"
 import Particles from "./Particles"
 import BackgroundMusic from "./BackgroundMusic"
 import { allQuestions } from "@/lib/questions"
-<<<<<<< HEAD
 import { gameStore } from "@/lib/store"
-=======
->>>>>>> 4608d31 (456789)
 
 interface QuestionInterfaceProps {
   player: Player
@@ -45,11 +35,11 @@ export default function QuestionInterface({ player, sessionId }: QuestionInterfa
   const [isListening, setIsListening] = useState(false)
   const [invalidAnswer, setInvalidAnswer] = useState(false)
   const [characterExpression, setCharacterExpression] = useState<"neutral" | "happy" | "thinking">("neutral")
-  const [characterSpeech, setCharacterSpeech] = useState<string | null>(null)
+  const [characterSpeech, setCharacterSpeech] = useState<string | undefined>(undefined)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
-  const questions = allQuestions[player.selectedCard || 1]
-  const currentQuestion = questions[currentQuestionIndex]
+  const questions = (allQuestions as QuestionSet)[player.selectedCard || 1]
+  const currentQuestion: Question = questions[currentQuestionIndex]
 
   useEffect(() => {
     startTimer()
@@ -118,7 +108,7 @@ export default function QuestionInterface({ player, sessionId }: QuestionInterfa
           setShowAudienceHelp(false)
           setTimeLeft(120)
           setCharacterExpression("neutral")
-          setCharacterSpeech(null)
+          setCharacterSpeech(undefined)
           startTimer()
         } else {
           setIsGameOver(true)
@@ -194,7 +184,6 @@ export default function QuestionInterface({ player, sessionId }: QuestionInterfa
     }
   }, [isGameOver, player, score, updatePlayer])
 
-<<<<<<< HEAD
   useEffect(() => {
     const checkGameCompletion = async () => {
       if (isGameOver) {
@@ -229,8 +218,6 @@ export default function QuestionInterface({ player, sessionId }: QuestionInterfa
     checkGameCompletion()
   }, [isGameOver, sessionId, player, score, updatePlayer, router])
 
-=======
->>>>>>> 4608d31 (456789)
   if (isGameOver) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#FFD700] via-[#FF6B6B] to-[#4834d4] flex items-center justify-center p-8">
@@ -286,7 +273,7 @@ export default function QuestionInterface({ player, sessionId }: QuestionInterfa
           <p className="text-xl text-white mb-8">{currentQuestion.text}</p>
 
           <div className="grid gap-4">
-            {currentQuestion.options.map((option, index) => (
+            {currentQuestion.options.map((option: string, index: number) => (
               <motion.button
                 key={option}
                 onClick={() => !selectedAnswer && handleAnswer(option)}
@@ -327,7 +314,7 @@ export default function QuestionInterface({ player, sessionId }: QuestionInterfa
             >
               <p className="text-lg">📊 Resultado da audiência:</p>
               <div className="mt-2 grid gap-2">
-                {currentQuestion.options.map((option, index) => {
+                {currentQuestion.options.map((option: string, index: number) => {
                   const percentage =
                     option === currentQuestion.correctAnswer
                       ? Math.floor(Math.random() * 20) + 60
@@ -422,7 +409,4 @@ export default function QuestionInterface({ player, sessionId }: QuestionInterfa
     </div>
   )
 }
-<<<<<<< HEAD
 
-=======
->>>>>>> 4608d31 (456789)

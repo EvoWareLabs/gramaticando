@@ -1,12 +1,21 @@
+// Adicione estas interfaces
+export interface Question {
+  text: string
+  options: string[]
+  correctAnswer: string
+  hint: string
+}
+
+export interface QuestionSet {
+  [key: number]: Question[]
+}
+
 export interface GameSession {
   id: string
   createdAt: number
   status: "active" | "completed"
   players: { [key: string]: Player }
-<<<<<<< HEAD
   completedCards: { [key: string]: boolean }
-=======
->>>>>>> 4608d31 (456789)
 }
 
 export interface Player {
@@ -19,12 +28,9 @@ export interface Player {
   answers: Answer[]
   hasSeenCardExplanation?: boolean
   helpUsed: number
-<<<<<<< HEAD
   completedCards: number[]
   rank?: number
   isGameCompleted?: boolean
-=======
->>>>>>> 4608d31 (456789)
 }
 
 export interface Answer {
@@ -38,19 +44,7 @@ export interface Card {
   questions: Question[]
 }
 
-export interface Question {
-  id: number
-  text: string
-  options: string[]
-  correctAnswer: string
-  hint?: string
-}
-
-<<<<<<< HEAD
 export interface RankingPlayer extends Player {
   position: number
   medal?: "gold" | "silver" | "bronze"
 }
-
-=======
->>>>>>> 4608d31 (456789)

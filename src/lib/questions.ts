@@ -1,4 +1,6 @@
-export const allQuestions = {
+import type { QuestionSet } from "@/types/types"
+
+export const allQuestions: QuestionSet = {
   1: [
     {
       text: "Qual é a função principal dos verbos em uma frase?",
