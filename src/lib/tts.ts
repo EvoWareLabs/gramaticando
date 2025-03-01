@@ -53,7 +53,7 @@ class TextToSpeechService {
       await this.initialize()
     }
 
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve) => {
       if (!this.synth || !this.voice) {
         console.warn("Speech synthesis not available")
         resolve() // Resolve without speaking to allow the game to continue
@@ -77,18 +77,15 @@ class TextToSpeechService {
 
         utterance.onerror = (event) => {
           console.error("Speech synthesis error:", event)
-          // Log more details about the error
           console.error("Error name:", event.error)
-          console.error("Error message:", event.message)
-          // Resolve instead of reject to allow the game to continue
+          // Still resolve to allow the game to continue
           resolve()
         }
 
         this.synth.speak(utterance)
       } catch (error) {
         console.error("Speech error:", error)
-        // Resolve instead of reject to allow the game to continue
-        resolve()
+        resolve() // Resolve despite error to allow the game to continue
       }
     })
   }

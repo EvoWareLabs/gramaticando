@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Mic } from 'lucide-react'
+import { Mic } from "lucide-react"
 import Character from "@/components/Character"
 import { ttsService } from "@/lib/tts"
 import { useGame } from "@/providers/GameContext"
@@ -156,7 +156,7 @@ export default function CardsInterface({ player, sessionId }: CardsInterfaceProp
       const session = await getSession(sessionId)
       if (session?.players) {
         const isCardTaken = Object.values(session.players).some(
-          (p) => p.selectedCard === cardNumber && p.id !== player.id
+          (p) => p.selectedCard === cardNumber && p.id !== player.id,
         )
         if (isCardTaken) {
           ttsService.speak("Este cartão já foi escolhido por outro jogador. Por favor, escolha outro.")
@@ -194,18 +194,14 @@ export default function CardsInterface({ player, sessionId }: CardsInterfaceProp
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#FFD700] via-[#FF6B6B] to-[#4834d4]">
       <Particles className="absolute inset-0" />
-      
+
       <div className="relative z-10 flex items-center justify-center min-h-screen p-8">
         <div className="max-w-6xl w-full">
           <AnimatePresence mode="wait">
             <motion.div
               key={stage}
               initial={{ opacity: 0 }}
-              animate={
-                isExplanationDone
-                  ? { opacity: 1, x: -300, y: 0, scale: 0.7 }
-                  : { opacity: 1 }
-              }
+              animate={isExplanationDone ? { opacity: 1, x: -300, y: 0, scale: 0.7 } : { opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5 }}
               className="fixed left-0 top-1/2 -translate-y-1/2"
@@ -229,11 +225,7 @@ export default function CardsInterface({ player, sessionId }: CardsInterfaceProp
           )}
 
           {showCards && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="w-full mt-8"
-            >
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="w-full mt-8">
               <motion.h1
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -252,7 +244,7 @@ export default function CardsInterface({ player, sessionId }: CardsInterfaceProp
                     whileHover={{
                       scale: 1.05,
                       rotateY: hoveredCard === number ? 180 : 0,
-                      transition: { duration: 0.3 }
+                      transition: { duration: 0.3 },
                     }}
                     onHoverStart={() => setHoveredCard(number)}
                     onHoverEnd={() => setHoveredCard(null)}
@@ -283,10 +275,10 @@ export default function CardsInterface({ player, sessionId }: CardsInterfaceProp
                     bg-gradient-to-r from-emerald-500 to-teal-500
                     hover:from-emerald-600 hover:to-teal-600
                     transform transition-all duration-300
-                    ${isListening ? 'scale-95 opacity-90' : 'hover:scale-105 hover:shadow-lg'}
+                    ${isListening ? "scale-95 opacity-90" : "hover:scale-105 hover:shadow-lg"}
                   `}
                 >
-                  <Mic className={`mr-2 h-6 w-6 ${isListening ? 'animate-pulse' : ''}`} />
+                  <Mic className={`mr-2 h-6 w-6 ${isListening ? "animate-pulse" : ""}`} />
                   {isListening ? "Ouvindo..." : "Falar número do cartão"}
                 </Button>
               </motion.div>
@@ -299,13 +291,13 @@ export default function CardsInterface({ player, sessionId }: CardsInterfaceProp
               animate={{ opacity: 1 }}
               className="fixed bottom-8 left-1/2 -translate-x-1/2"
             >
-              <p className="text-white text-lg font-medium">
-                Pressione '+' para avançar
-              </p>
+              <p className="text-white text-lg font-medium">Pressione '+' para avançar</p>
             </motion.div>
           )}
         </div>
       </div>
+      <p>{"Don't forget to choose a card!"}</p>
     </div>
   )
 }
+

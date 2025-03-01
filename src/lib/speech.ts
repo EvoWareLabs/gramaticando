@@ -1,3 +1,48 @@
+// Fix explicit any and unused variables
+
+declare global {
+  interface Window {
+    webkitSpeechRecognition: { new (): SpeechRecognition };
+  }
+}
+
+interface SpeechRecognition {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  maxAlternatives: number;
+  start(): void;
+  stop(): void;
+  onstart: (() => void) | null;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+}
+
+interface SpeechRecognitionEvent {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent {
+  error: string;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  length: number;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+}
+
 class SpeechRecognitionService {
   private recognition: SpeechRecognition | null = null
   private isListening = false
@@ -5,7 +50,7 @@ class SpeechRecognitionService {
   constructor() {
     if (typeof window !== "undefined") {
       if ("webkitSpeechRecognition" in window) {
-        this.recognition = new (window as any).webkitSpeechRecognition()
+        this.recognition = new (window as unknown as { webkitSpeechRecognition: new () => SpeechRecognition }).webkitSpeechRecognition()
         this.setupRecognition()
       }
     }
@@ -42,14 +87,10 @@ class SpeechRecognitionService {
       }
 
       this.recognition.onresult = (event) => {
-        let interimTranscript = ""
-
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript
           if (event.results[i].isFinal) {
             finalTranscript += transcript
-          } else {
-            interimTranscript += transcript
           }
         }
 
@@ -64,6 +105,7 @@ class SpeechRecognitionService {
       }
 
       this.recognition.onerror = (event) => {
+        console.error("Speech recognition error:", event.error)
         if (event.error === "no-speech" && !hasStartedListening) {
           // If error occurs before any listening, retry
           this.recognition?.start()
@@ -74,7 +116,7 @@ class SpeechRecognitionService {
           // If we have some transcript despite the error, use it
           resolve(finalTranscript)
         } else {
-          reject(event.error)
+          reject(new Error(event.error))
         }
       }
 
@@ -92,7 +134,7 @@ class SpeechRecognitionService {
       try {
         this.recognition.start()
       } catch (error) {
-        reject(error)
+        reject(error instanceof Error ? error : new Error('Unknown error'))
       }
     })
   }
@@ -116,4 +158,3 @@ if (typeof window !== "undefined") {
 }
 
 export { speechService }
-

@@ -41,16 +41,7 @@ export default function QuestionInterface({ player, sessionId }: QuestionInterfa
   const questions = (allQuestions as QuestionSet)[player.selectedCard || 1]
   const currentQuestion: Question = questions[currentQuestionIndex]
 
-  useEffect(() => {
-    startTimer()
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
-      }
-    }
-  }, [])
-
-  const startTimer = useCallback(() => {
+  const startTimer = useCallback((): void => {
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -61,9 +52,18 @@ export default function QuestionInterface({ player, sessionId }: QuestionInterfa
         return prev - 1
       })
     }, 1000)
-  }, [])
+  }, [handleNoAnswer])
 
-  const handleNoAnswer = useCallback(() => {
+  useEffect(() => {
+    startTimer()
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+    }
+  }, [startTimer])
+
+  const handleNoAnswer: () => void = useCallback(() => {
     ttsService.speak("Tempo esgotado! Passando para a próxima pergunta.")
     setCharacterExpression("thinking")
     setCharacterSpeech("Ops! O tempo acabou. Vamos para a próxima pergunta.")
