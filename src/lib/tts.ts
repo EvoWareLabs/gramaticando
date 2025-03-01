@@ -4,8 +4,6 @@ class TextToSpeechService {
   private isInitialized = false
   private initializationAttempts = 0
   private readonly MAX_ATTEMPTS = 5
-  private currentUtterance: SpeechSynthesisUtterance | null = null
-  private isInterrupted = false
 
   constructor() {
     if (typeof window !== "undefined") {
@@ -25,15 +23,7 @@ class TextToSpeechService {
         const checkVoices = () => {
           const voices = this.synth!.getVoices()
           if (voices.length > 0) {
-            // Tenta encontrar uma voz em português do Brasil
-            this.voice = voices.find(
-              (v) => 
-                v.lang === "pt-BR" || 
-                v.lang === "pt_BR" || 
-                v.name.toLowerCase().includes("brasil") ||
-                v.name.toLowerCase().includes("portuguese")
-            ) || voices[0]
-            
+            this.voice = voices.find((v) => v.lang === "pt-BR") || voices[0]
             this.isInitialized = true
             console.log("TTS initialized with voice:", this.voice.name)
             resolve()
@@ -66,20 +56,14 @@ class TextToSpeechService {
     return new Promise<void>((resolve) => {
       if (!this.synth || !this.voice) {
         console.warn("Speech synthesis not available")
-        resolve()
+        resolve() // Resolve without speaking to allow the game to continue
         return
       }
 
       try {
-        // Cancela qualquer fala anterior
         this.stop()
 
-        // Reseta o flag de interrupção
-        this.isInterrupted = false
-
         const utterance = new SpeechSynthesisUtterance(text)
-        this.currentUtterance = utterance
-        
         utterance.voice = this.voice
         utterance.lang = "pt-BR"
         utterance.rate = 1
@@ -87,57 +71,33 @@ class TextToSpeechService {
         utterance.volume = 1
 
         utterance.onend = () => {
-          if (!this.isInterrupted) {
-            console.log("Speech ended successfully")
-          }
-          this.currentUtterance = null
+          console.log("Speech ended successfully")
           resolve()
         }
 
         utterance.onerror = (event) => {
           console.error("Speech synthesis error:", event)
-          if (event.error === "interrupted") {
-            this.isInterrupted = true
-          }
           console.error("Error name:", event.error)
-          this.currentUtterance = null
-          resolve() // Resolve mesmo com erro para não travar o fluxo
+          // Still resolve to allow the game to continue
+          resolve()
         }
 
-        // Adiciona um pequeno delay antes de iniciar a fala
-        setTimeout(() => {
-          if (this.synth && !this.isInterrupted) {
-            this.synth.speak(utterance)
-          }
-        }, 100)
-
+        this.synth.speak(utterance)
       } catch (error) {
         console.error("Speech error:", error)
-        this.currentUtterance = null
-        resolve()
+        resolve() // Resolve despite error to allow the game to continue
       }
     })
   }
 
   stop() {
     if (this.synth) {
-      this.isInterrupted = true
       this.synth.cancel()
-      if (this.currentUtterance) {
-        this.currentUtterance = null
-      }
     }
   }
 
   isReady(): boolean {
     return this.isInitialized && !!this.voice
-  }
-
-  // Método para reconectar o serviço se necessário
-  async reconnect(): Promise<void> {
-    this.isInitialized = false
-    this.initializationAttempts = 0
-    await this.initialize()
   }
 }
 
@@ -148,3 +108,4 @@ if (typeof window !== "undefined") {
 }
 
 export { ttsService }
+
