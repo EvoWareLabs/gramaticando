@@ -1,17 +1,19 @@
-import { Suspense } from "react"
-import dynamic from "next/dynamic"
-import LoadingSpinner from "@/components/LoadingSpinner"
+'use client'; // Indica que este arquivo é um Client Component
+
+import { Suspense } from "react";
+import dynamic from "next/dynamic";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 // Use dynamic import to avoid initialization issues
 const QuestionPage = dynamic(() => import("./QuestionPage"), {
   loading: () => <LoadingSpinner />,
   ssr: false, // Disable SSR for this component to avoid hydration issues
-})
+});
 
 interface PageProps {
   params: {
-    id: string
-  }
+    id: string;
+  };
 }
 
 export default function Page({ params }: PageProps) {
@@ -19,6 +21,5 @@ export default function Page({ params }: PageProps) {
     <Suspense fallback={<LoadingSpinner />}>
       <QuestionPage id={params.id} />
     </Suspense>
-  )
+  );
 }
-
