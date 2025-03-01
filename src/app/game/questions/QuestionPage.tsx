@@ -1,15 +1,14 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
 import { useGame } from "@/providers/GameContext"
 import LoadingSpinner from "@/components/LoadingSpinner"
 
-// Use dynamic import for QuestionInterface to avoid initialization issues
 const QuestionInterface = dynamic(() => import("@/components/QuestionInterface"), {
   loading: () => <LoadingSpinner />,
-  ssr: false, // Disable SSR for this component
+  ssr: false,
 })
 
 export default function QuestionPage({ id }: { id: string }) {
@@ -17,25 +16,49 @@ export default function QuestionPage({ id }: { id: string }) {
   const { player, getSession } = useGame()
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
+  const [hasAttemptedInit, setHasAttemptedInit] = useState(false)
+
+  const initQuestion = useCallback(async () => {
+    if (!id || hasAttemptedInit) return
+
+    try {
+      setHasAttemptedInit(true)
+      const session = await getSession(id)
+
+      if (!session) {
+        setError("Sessão não encontrada")
+        router.push("/")
+        return
+      }
+
+      if (!player?.selectedCard) {
+        router.push(`/game/${id}`)
+        return
+      }
+
+      setIsLoading(false)
+    } catch (err) {
+      console.error("Error initializing question:", err)
+      setError("Erro ao carregar a questão")
+      setIsLoading(false)
+    }
+  }, [id, player, getSession, router, hasAttemptedInit])
 
   useEffect(() => {
-    const initQuestion = async () => {
-      try {
-        const session = await getSession(id)
-        if (!session || !player?.selectedCard) {
-          router.push(`/game/${id}`)
-          return
-        }
-        setIsLoading(false)
-      } catch (err) {
-        console.error("Error initializing question:", err)
-        setError("Erro ao carregar a questão")
+    initQuestion()
+  }, [initQuestion])
+
+  // Add a timeout to prevent infinite loading
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (isLoading) {
+        setError("Tempo limite excedido ao carregar a questão")
         setIsLoading(false)
       }
-    }
+    }, 10000) // 10 seconds timeout
 
-    initQuestion()
-  }, [id, player, getSession, router])
+    return () => clearTimeout(timeoutId)
+  }, [isLoading])
 
   if (isLoading) {
     return <LoadingSpinner />
@@ -58,6 +81,7 @@ export default function QuestionPage({ id }: { id: string }) {
   }
 
   if (!player) {
+    router.push("/")
     return null
   }
 

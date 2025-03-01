@@ -6,30 +6,12 @@ import { useState, useEffect } from "react"
 interface CharacterProps {
   className?: string
   expression?: "neutral" | "happy" | "thinking"
-  speech?: string
+  speech?: string | null
 }
 
-export default function Character({ 
-  className = "", 
-  expression = "neutral", 
-  speech 
-}: CharacterProps) {
+export default function Character({ className = "", expression = "neutral", speech = null }: CharacterProps) {
   const [displayedText, setDisplayedText] = useState("")
   const [isTyping, setIsTyping] = useState(false)
-
-  // Definir posições padrão dos olhos para cada expressão
-  const eyePositions = {
-    neutral: { x: 35, y: 40 },
-    thinking: { x: 37, y: 39 },
-    happy: { x: 35, y: 38 }
-  }
-
-  // Definir caminhos do sorriso para cada expressão
-  const mouthPaths = {
-    neutral: "M 30,52 Q 50,52 70,52",
-    thinking: "M 30,55 Q 50,50 70,55",
-    happy: "M 30,50 Q 50,60 70,50"
-  }
 
   useEffect(() => {
     if (speech) {
@@ -48,6 +30,13 @@ export default function Character({
     }
   }, [speech])
 
+  // Default positions for SVG elements
+  const defaultEyePositions = {
+    leftEye: { cx: 35, cy: 40 },
+    rightEye: { cx: 65, cy: 40 },
+    pupilOffset: expression === "thinking" ? { x: 2, y: -1 } : { x: 0, y: 0 },
+  }
+
   return (
     <div className={`relative flex items-center justify-center ${className}`}>
       <div className="relative w-full max-w-[500px]">
@@ -64,20 +53,17 @@ export default function Character({
             >
               <div className="relative bg-white rounded-[20px] p-6 shadow-lg">
                 <div className="relative">
-                  <p className="text-black text-lg leading-tight min-h-[3em]">
-                    {displayedText}
-                  </p>
+                  <p className="text-black text-lg leading-tight min-h-[3em]">{displayedText}</p>
                   {isTyping && (
                     <motion.span
                       className="absolute -right-2 bottom-0 text-lg text-primary"
                       animate={{ opacity: [1, 0] }}
-                      transition={{ duration: 0.5, repeat: Infinity }}
+                      transition={{ duration: 0.5, repeat: Number.POSITIVE_INFINITY }}
                     >
                       ▋
                     </motion.span>
                   )}
                 </div>
-                {/* Speech Bubble Tail */}
                 <div
                   className="absolute left-1/2 bottom-0 w-8 h-8 transform -translate-x-1/2 translate-y-1/2 rotate-45 bg-white"
                   style={{ clipPath: "polygon(0 0, 100% 0, 50% 100%)" }}
@@ -92,76 +78,46 @@ export default function Character({
           className="relative z-0"
           animate={{
             scale: isTyping ? [1, 1.02, 1] : 1,
-            transition: { 
-              duration: 0.5, 
-              repeat: isTyping ? Infinity : 0 
-            },
+            transition: { duration: 0.5, repeat: isTyping ? Number.POSITIVE_INFINITY : 0 },
           }}
         >
-          <svg 
-            viewBox="0 0 100 100" 
-            className="w-full h-full"
-            preserveAspectRatio="xMidYMid meet"
-          >
+          <svg viewBox="0 0 100 100" className="w-full h-full">
             {/* Base Circle */}
-            <circle 
-              cx="50" 
-              cy="50" 
-              r="45" 
-              fill="#2ECC71" 
-            />
+            <circle cx="50" cy="50" r="45" fill="#2ECC71" />
 
             {/* Eyes */}
             <g>
               {/* Left Eye */}
-              <circle 
-                cx={eyePositions[expression].x} 
-                cy={eyePositions[expression].y} 
-                r="6" 
-                fill="white" 
-              />
+              <circle cx={defaultEyePositions.leftEye.cx} cy={defaultEyePositions.leftEye.cy} r="6" fill="white" />
               <motion.circle
-                cx={eyePositions[expression].x}
-                cy={eyePositions[expression].y}
+                cx={defaultEyePositions.leftEye.cx + defaultEyePositions.pupilOffset.x}
+                cy={defaultEyePositions.leftEye.cy + defaultEyePositions.pupilOffset.y}
                 r="3"
                 fill="black"
-                animate={{
-                  cx: eyePositions[expression].x,
-                  cy: eyePositions[expression].y,
-                }}
-                transition={{ duration: 0.3 }}
               />
 
               {/* Right Eye */}
-              <circle 
-                cx={eyePositions[expression].x + 30} 
-                cy={eyePositions[expression].y} 
-                r="6" 
-                fill="white" 
-              />
+              <circle cx={defaultEyePositions.rightEye.cx} cy={defaultEyePositions.rightEye.cy} r="6" fill="white" />
               <motion.circle
-                cx={eyePositions[expression].x + 30}
-                cy={eyePositions[expression].y}
+                cx={defaultEyePositions.rightEye.cx + defaultEyePositions.pupilOffset.x}
+                cy={defaultEyePositions.rightEye.cy + defaultEyePositions.pupilOffset.y}
                 r="3"
                 fill="black"
-                animate={{
-                  cx: eyePositions[expression].x + 30,
-                  cy: eyePositions[expression].y,
-                }}
-                transition={{ duration: 0.3 }}
               />
             </g>
 
             {/* Mouth */}
             <motion.path
-              d={mouthPaths[expression]}
+              d={
+                expression === "happy"
+                  ? "M 30,50 Q 50,60 70,50"
+                  : expression === "thinking"
+                    ? "M 30,55 Q 50,50 70,55"
+                    : "M 30,52 Q 50,52 70,52"
+              }
               stroke="black"
               strokeWidth="2"
               fill="transparent"
-              animate={{
-                d: mouthPaths[expression]
-              }}
-              transition={{ duration: 0.3 }}
             />
           </svg>
         </motion.div>
@@ -169,3 +125,4 @@ export default function Character({
     </div>
   )
 }
+
