@@ -4,7 +4,6 @@ class TextToSpeechService {
   private isInitialized = false
   private initializationAttempts = 0
   private readonly MAX_ATTEMPTS = 5
-  private currentUtterance: SpeechSynthesisUtterance | null = null
 
   constructor() {
     if (typeof window !== "undefined") {
@@ -57,7 +56,7 @@ class TextToSpeechService {
     return new Promise<void>((resolve) => {
       if (!this.synth || !this.voice) {
         console.warn("Speech synthesis not available")
-        resolve()
+        resolve() // Resolve without speaking to allow the game to continue
         return
       }
 
@@ -71,30 +70,22 @@ class TextToSpeechService {
         utterance.pitch = 1
         utterance.volume = 1
 
-        this.currentUtterance = utterance
-
         utterance.onend = () => {
           console.log("Speech ended successfully")
-          this.currentUtterance = null
           resolve()
         }
 
         utterance.onerror = (event) => {
           console.error("Speech synthesis error:", event)
-          if (event.error === "interrupted" || event.error === "canceled") {
-            // Ignore interruption errors as they're expected when stopping speech
-            resolve()
-          } else {
-            console.error("Error name:", event.error)
-            console.error("Error message:", event.message)
-            resolve()
-          }
+          console.error("Error name:", event.error)
+          // Still resolve to allow the game to continue
+          resolve()
         }
 
         this.synth.speak(utterance)
       } catch (error) {
         console.error("Speech error:", error)
-        resolve()
+        resolve() // Resolve despite error to allow the game to continue
       }
     })
   }
@@ -102,9 +93,6 @@ class TextToSpeechService {
   stop() {
     if (this.synth) {
       this.synth.cancel()
-      if (this.currentUtterance) {
-        this.currentUtterance = null
-      }
     }
   }
 
