@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 import { ref, get, set, update } from "firebase/database"
 import { db } from "./firebase"
 import type { GameSession, Player, RankingPlayer } from "@/types/types"
+=======
+import { ref, get, set } from "firebase/database"
+import { db } from "./firebase"
+import type { GameSession, Player } from "@/types/types"
+>>>>>>> 4608d31 (456789)
 
 class GameStore {
   async createSession(): Promise<GameSession> {
@@ -9,7 +15,10 @@ class GameStore {
       createdAt: Date.now(),
       status: "active",
       players: {},
+<<<<<<< HEAD
       completedCards: {},
+=======
+>>>>>>> 4608d31 (456789)
     }
 
     try {
@@ -43,6 +52,7 @@ class GameStore {
       throw error
     }
   }
+<<<<<<< HEAD
 
   async markCardAsCompleted(sessionId: string, cardId: number): Promise<void> {
     try {
@@ -91,6 +101,8 @@ class GameStore {
       throw error
     }
   }
+=======
+>>>>>>> 4608d31 (456789)
 }
 
 export const gameStore = new GameStore()

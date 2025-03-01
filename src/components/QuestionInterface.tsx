@@ -1,10 +1,17 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
+<<<<<<< HEAD
 import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { HelpCircle, Users, SkipForward, Mic } from "lucide-react"
+=======
+import { motion, AnimatePresence } from "framer-motion"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { HelpCircle, Users, SkipForward, Mic } from 'lucide-react'
+>>>>>>> 4608d31 (456789)
 import Character from "@/components/Character"
 import { ttsService } from "@/lib/tts"
 import { speechService } from "@/lib/speech"
@@ -13,7 +20,10 @@ import type { Player } from "@/types/types"
 import Particles from "./Particles"
 import BackgroundMusic from "./BackgroundMusic"
 import { allQuestions } from "@/lib/questions"
+<<<<<<< HEAD
 import { gameStore } from "@/lib/store"
+=======
+>>>>>>> 4608d31 (456789)
 
 interface QuestionInterfaceProps {
   player: Player
@@ -184,6 +194,7 @@ export default function QuestionInterface({ player, sessionId }: QuestionInterfa
     }
   }, [isGameOver, player, score, updatePlayer])
 
+<<<<<<< HEAD
   useEffect(() => {
     const checkGameCompletion = async () => {
       if (isGameOver) {
@@ -218,6 +229,8 @@ export default function QuestionInterface({ player, sessionId }: QuestionInterfa
     checkGameCompletion()
   }, [isGameOver, sessionId, player, score, updatePlayer, router])
 
+=======
+>>>>>>> 4608d31 (456789)
   if (isGameOver) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#FFD700] via-[#FF6B6B] to-[#4834d4] flex items-center justify-center p-8">
@@ -409,4 +422,7 @@ export default function QuestionInterface({ player, sessionId }: QuestionInterfa
     </div>
   )
 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> 4608d31 (456789)

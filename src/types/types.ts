@@ -3,7 +3,10 @@ export interface GameSession {
   createdAt: number
   status: "active" | "completed"
   players: { [key: string]: Player }
+<<<<<<< HEAD
   completedCards: { [key: string]: boolean }
+=======
+>>>>>>> 4608d31 (456789)
 }
 
 export interface Player {
@@ -16,9 +19,12 @@ export interface Player {
   answers: Answer[]
   hasSeenCardExplanation?: boolean
   helpUsed: number
+<<<<<<< HEAD
   completedCards: number[]
   rank?: number
   isGameCompleted?: boolean
+=======
+>>>>>>> 4608d31 (456789)
 }
 
 export interface Answer {
@@ -40,8 +46,11 @@ export interface Question {
   hint?: string
 }
 
+<<<<<<< HEAD
 export interface RankingPlayer extends Player {
   position: number
   medal?: "gold" | "silver" | "bronze"
 }
 
+=======
+>>>>>>> 4608d31 (456789)
