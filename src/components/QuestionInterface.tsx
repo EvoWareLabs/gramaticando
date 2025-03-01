@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { HelpCircle, Users, SkipForward, Mic } from 'lucide-react'
+import { HelpCircle, Users, SkipForward, Mic } from "lucide-react"
 import Character from "@/components/Character"
 import { ttsService } from "@/lib/tts"
 import { speechService } from "@/lib/speech"
@@ -13,6 +13,7 @@ import type { Player } from "@/types/types"
 import Particles from "./Particles"
 import BackgroundMusic from "./BackgroundMusic"
 import { allQuestions } from "@/lib/questions"
+import { gameStore } from "@/lib/store"
 
 interface QuestionInterfaceProps {
   player: Player
@@ -182,6 +183,40 @@ export default function QuestionInterface({ player, sessionId }: QuestionInterfa
       updatePlayer({ ...player, score })
     }
   }, [isGameOver, player, score, updatePlayer])
+
+  useEffect(() => {
+    const checkGameCompletion = async () => {
+      if (isGameOver) {
+        try {
+          // Marca o cartão atual como concluído
+          await gameStore.markCardAsCompleted(sessionId, player.selectedCard || 1)
+
+          // Verifica se todos os cartões foram completados
+          const isCompleted = await gameStore.isGameCompleted(sessionId)
+
+          if (isCompleted) {
+            // Atualiza o status do jogador
+            const updatedPlayer = {
+              ...player,
+              isGameCompleted: true,
+              score: score,
+            }
+            await updatePlayer(updatedPlayer)
+
+            // Redireciona para a página de ranking
+            router.push(`/game/${sessionId}/ranking`)
+          } else {
+            // Redireciona de volta para a seleção de cartões
+            router.push(`/game/${sessionId}`)
+          }
+        } catch (error) {
+          console.error("Error checking game completion:", error)
+        }
+      }
+    }
+
+    checkGameCompletion()
+  }, [isGameOver, sessionId, player, score, updatePlayer, router])
 
   if (isGameOver) {
     return (
@@ -374,3 +409,4 @@ export default function QuestionInterface({ player, sessionId }: QuestionInterfa
     </div>
   )
 }
+
