@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { HelpCircle, Users, SkipForward, Mic } from "lucide-react"
+import { HelpCircle, Users, SkipForward, Mic } from 'lucide-react'
 import Character from "@/components/Character"
 import { ttsService } from "@/lib/tts"
 import { speechService } from "@/lib/speech"
@@ -35,17 +35,44 @@ export default function QuestionInterface({ player, sessionId }: QuestionInterfa
   const [isListening, setIsListening] = useState(false)
   const [invalidAnswer, setInvalidAnswer] = useState(false)
   const [characterExpression, setCharacterExpression] = useState<"neutral" | "happy" | "thinking">("neutral")
-  const [characterSpeech, setCharacterSpeech] = useState<string | undefined>(undefined)
+  const [characterSpeech, setCharacterSpeech] = useState<string | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   const questions = (allQuestions as QuestionSet)[player.selectedCard || 1]
   const currentQuestion: Question = questions[currentQuestionIndex]
 
-  const startTimer = useCallback((): void => {
+  const handleNoAnswer = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+    }
+    
+    ttsService.speak("Tempo esgotado! Passando para a próxima pergunta.")
+    setCharacterExpression("thinking")
+    setCharacterSpeech("Ops! O tempo acabou. Vamos para a próxima pergunta.")
+    
+    setTimeout(() => {
+      if (currentQuestionIndex < questions.length - 1) {
+        setCurrentQuestionIndex((prev) => prev + 1)
+        setSelectedAnswer(null)
+        setIsAnswerCorrect(null)
+        setShowHint(false)
+        setShowAudienceHelp(false)
+        setTimeLeft(120)
+        startTimer()
+      } else {
+        setIsGameOver(true)
+      }
+    }, 3000)
+  }, [currentQuestionIndex, questions.length])
+
+  const startTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+    }
+
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          clearInterval(timerRef.current!)
           handleNoAnswer()
           return 120 // Reset timer for next question
         }
@@ -62,25 +89,6 @@ export default function QuestionInterface({ player, sessionId }: QuestionInterfa
       }
     }
   }, [startTimer])
-
-  const handleNoAnswer: () => void = useCallback(() => {
-    ttsService.speak("Tempo esgotado! Passando para a próxima pergunta.")
-    setCharacterExpression("thinking")
-    setCharacterSpeech("Ops! O tempo acabou. Vamos para a próxima pergunta.")
-    setTimeout(() => {
-      if (currentQuestionIndex < questions.length - 1) {
-        setCurrentQuestionIndex((prev) => prev + 1)
-        setSelectedAnswer(null)
-        setIsAnswerCorrect(null)
-        setShowHint(false)
-        setShowAudienceHelp(false)
-        setTimeLeft(120)
-        startTimer()
-      } else {
-        setIsGameOver(true)
-      }
-    }, 3000)
-  }, [currentQuestionIndex, questions.length, startTimer])
 
   const handleAnswer = useCallback(
     async (answer: string) => {
@@ -108,7 +116,7 @@ export default function QuestionInterface({ player, sessionId }: QuestionInterfa
           setShowAudienceHelp(false)
           setTimeLeft(120)
           setCharacterExpression("neutral")
-          setCharacterSpeech(undefined)
+          setCharacterSpeech(null)
           startTimer()
         } else {
           setIsGameOver(true)
@@ -409,4 +417,3 @@ export default function QuestionInterface({ player, sessionId }: QuestionInterfa
     </div>
   )
 }
-

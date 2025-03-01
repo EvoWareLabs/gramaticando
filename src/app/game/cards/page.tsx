@@ -25,7 +25,7 @@ export default function Page() {
       } else {
         setError("Por favor, diga um número entre 1 e 10")
       }
-    } catch (err) {
+    } catch  {
       setError("Não foi possível reconhecer sua voz. Tente novamente.")
     } finally {
       setIsListening(false)

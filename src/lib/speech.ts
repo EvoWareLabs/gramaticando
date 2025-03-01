@@ -1,58 +1,35 @@
-// Fix explicit any and unused variables
-
 declare global {
   interface Window {
-    webkitSpeechRecognition: { new (): SpeechRecognition };
+    webkitSpeechRecognition: any
   }
 }
 
-interface SpeechRecognition {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  maxAlternatives: number;
-  start(): void;
-  stop(): void;
-  onstart: (() => void) | null;
-  onresult: ((event: SpeechRecognitionEvent) => void) | null;
-  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
-  onend: (() => void) | null;
-}
-
-interface SpeechRecognitionEvent {
-  resultIndex: number;
-  results: SpeechRecognitionResultList;
-}
-
-interface SpeechRecognitionErrorEvent {
-  error: string;
-}
-
-interface SpeechRecognitionResultList {
-  length: number;
-  [index: number]: SpeechRecognitionResult;
-}
-
-interface SpeechRecognitionResult {
-  isFinal: boolean;
-  length: number;
-  [index: number]: SpeechRecognitionAlternative;
-}
-
-interface SpeechRecognitionAlternative {
-  transcript: string;
+interface SpeechRecognitionError {
+  error: string
+  message?: string
 }
 
 class SpeechRecognitionService {
-  private recognition: SpeechRecognition | null = null
+  private recognition: any = null
   private isListening = false
+  private retryCount = 0
+  private maxRetries = 3
+  private readonly TIMEOUT_DURATION = 10000 // 10 segundos
 
   constructor() {
     if (typeof window !== "undefined") {
       if ("webkitSpeechRecognition" in window) {
-        this.recognition = new (window as unknown as { webkitSpeechRecognition: new () => SpeechRecognition }).webkitSpeechRecognition()
-        this.setupRecognition()
+        this.initializeRecognition()
       }
+    }
+  }
+
+  private initializeRecognition() {
+    try {
+      this.recognition = new window.webkitSpeechRecognition()
+      this.setupRecognition()
+    } catch (error) {
+      console.error("Error initializing speech recognition:", error)
     }
   }
 
@@ -78,42 +55,61 @@ class SpeechRecognitionService {
 
       let finalTranscript = ""
       let hasStartedListening = false
-      let silenceTimer: NodeJS.Timeout
+      let timeoutId: NodeJS.Timeout
+      this.retryCount = 0
+
+      const setupTimeout = () => {
+        return setTimeout(() => {
+          if (!finalTranscript) {
+            this.stop()
+            if (this.retryCount < this.maxRetries) {
+              this.retryCount++
+              console.log(`Retrying... Attempt ${this.retryCount}`)
+              this.recognition.start()
+            } else {
+              reject(new Error("Recognition timeout"))
+            }
+          }
+        }, this.TIMEOUT_DURATION)
+      }
 
       this.recognition.onstart = () => {
         this.isListening = true
         hasStartedListening = true
         console.log("Started listening...")
+        timeoutId = setupTimeout()
       }
 
-      this.recognition.onresult = (event) => {
+      this.recognition.onresult = (event: any) => {
+        clearTimeout(timeoutId)
+        
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript
           if (event.results[i].isFinal) {
-            finalTranscript += transcript
+            finalTranscript = transcript
+            this.stop()
+            resolve(finalTranscript)
+            return
           }
         }
 
-        // Reset silence timer on any speech detection
-        clearTimeout(silenceTimer)
-        silenceTimer = setTimeout(() => {
-          if (finalTranscript) {
-            this.stop()
-            resolve(finalTranscript)
-          }
-        }, 2000) // Wait 2 seconds of silence before considering speech complete
+        timeoutId = setupTimeout()
       }
 
-      this.recognition.onerror = (event) => {
-        console.error("Speech recognition error:", event.error)
+      this.recognition.onerror = (event: SpeechRecognitionError) => {
+        clearTimeout(timeoutId)
+        console.error("Speech recognition error:", event)
+
         if (event.error === "no-speech" && !hasStartedListening) {
-          // If error occurs before any listening, retry
-          this.recognition?.start()
-          return
+          if (this.retryCount < this.maxRetries) {
+            this.retryCount++
+            console.log(`Retrying... Attempt ${this.retryCount}`)
+            this.recognition.start()
+            return
+          }
         }
 
         if (finalTranscript) {
-          // If we have some transcript despite the error, use it
           resolve(finalTranscript)
         } else {
           reject(new Error(event.error))
@@ -121,16 +117,21 @@ class SpeechRecognitionService {
       }
 
       this.recognition.onend = () => {
+        clearTimeout(timeoutId)
         this.isListening = false
-        if (!finalTranscript && hasStartedListening) {
-          // If ended without transcript but was listening, restart
-          this.recognition?.start()
+        
+        if (!finalTranscript && hasStartedListening && this.retryCount < this.maxRetries) {
+          this.retryCount++
+          console.log(`Retrying... Attempt ${this.retryCount}`)
+          this.recognition.start()
           return
         }
-        clearTimeout(silenceTimer)
+
+        if (!finalTranscript) {
+          reject(new Error("No speech detected"))
+        }
       }
 
-      // Start recognition
       try {
         this.recognition.start()
       } catch (error) {
@@ -148,6 +149,12 @@ class SpeechRecognitionService {
 
   isRecognitionSupported(): boolean {
     return typeof window !== "undefined" && "webkitSpeechRecognition" in window
+  }
+
+  // Método para reiniciar o serviço se necessário
+  restart() {
+    this.stop()
+    this.initializeRecognition()
   }
 }
 
